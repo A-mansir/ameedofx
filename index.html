@@ -117,12 +117,12 @@
   let priceChart; // Chart instance
 
   const fetchPrices = async () => {
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coins.join()}&vs_currencies=usd`;
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coins.join()}&vs_currencies=ngn`;
     try {
       const res = await fetch(url);
       const data = await res.json();
 
-      const ticker = coins.map(coin => `${coin.toUpperCase()}: $${data[coin].usd}`).join(" ‒ ");
+      const ticker = coins.map(coin => `${coin.toUpperCase()}: $${data[coin].ngn}`).join(" ‒ ");
       document.getElementById('tickerText').textContent = ticker;
 
       const cards = coins.map(coin => {
@@ -144,7 +144,7 @@
   };
 
   const loadChart = async (coinId) => {
-    const res = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=7`);
+    const res = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=ngn&days=1`);
     const data = await res.json();
 
     const prices = data.prices.map(p => p[1]);
@@ -185,7 +185,7 @@
   };
 
   fetchPrices();
-  setInterval(fetchPrices, 60000);
+  setInterval(fetchPrices, 600);
   document.getElementById("year").textContent = new Date().getFullYear();
 </script>
 </body>
