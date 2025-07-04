@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>AmeedoFx - Live Crypto Prices</title>
+  <title>AmeedoFxz - Live Crypto Prices</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       background-color: #f4f4f4;
@@ -41,6 +42,7 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       padding: 20px;
       transition: 0.3s;
+      cursor: pointer;
     }
     .price-card:hover {
       transform: scale(1.05);
@@ -58,8 +60,8 @@
   <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
     <ul class="navbar-nav">
       <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
-      <li class="nav-item"><a class="nav-link" href="#">Buy</a></li>
-      <li class="nav-item"><a class="nav-link" href="#">Sell</a></li>
+      <li class="nav-item"><a class="nav-link disabled" href="#" tabindex="-1" role="button" aria-disabled="true">Buy</a></li>
+      <li class="nav-item"><a class="nav-link disabled" href="#" tabindex="-1" role="button" aria-disabled="true">Sell</a></li>
     </ul>
   </div>
 </nav>
@@ -68,8 +70,8 @@
 <section class="hero">
   <h1 class="display-4 fw-bold">AmeedoFx</h1>
   <p class="lead">Buy and Sell Cryptocurrency Instantly with Live Market Prices</p>
-  <a href="#" class="btn btn-success btn-lg m-2">Buy</a>
-  <a href="#" class="btn btn-outline-light btn-lg m-2">Sell</a>
+  <a href="#" class="btn btn-success btn-lg m-2 disabled" tabindex="-1" role="button" aria-disabled="true">Buy</a>
+  <a href="#" class="btn btn-outline-light btn-lg m-2 disabled" tabindex="-1" role="button" aria-disabled="true">Sell</a>
 </section>
 
 <!-- Price Ticker -->
@@ -85,9 +87,24 @@
   </div>
 </section>
 
+<!-- Chart Modal -->
+<div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="chartModalLabel">Price Chart</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <canvas id="priceChart" height="100"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Footer -->
 <footer class="text-center text-muted py-3 bg-light">
-  &copy; <span id="year"></span> AmeedoFx. Powered by CoinGecko API.
+  &copy; <span id="year"></span> AmeedoFx.
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -97,21 +114,21 @@
     'solana', 'cardano', 'dogecoin', 'ripple'
   ];
 
+  let priceChart; // Chart instance
+
   const fetchPrices = async () => {
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coins.join()}&vs_currencies=usd`;
     try {
       const res = await fetch(url);
       const data = await res.json();
 
-      // Ticker update
       const ticker = coins.map(coin => `${coin.toUpperCase()}: $${data[coin].usd}`).join(" ‒ ");
       document.getElementById('tickerText').textContent = ticker;
 
-      // Cards update
       const cards = coins.map(coin => {
         return `
           <div class="col-6 col-md-3">
-            <div class="price-card">
+            <div class="price-card" onclick="loadChart('${coin}')">
               <img src="https://cryptoicons.org/api/icon/${coin}/50" onerror="this.style.display='none'" />
               <h5 class="mt-2">${coin.toUpperCase()}</h5>
               <p class="fw-bold text-success">$${data[coin].usd.toLocaleString()}</p>
@@ -126,8 +143,49 @@
     }
   };
 
-  fetchPrices(); // Load on page
-  setInterval(fetchPrices, 60000); // Update every 60s
+  const loadChart = async (coinId) => {
+    const res = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=7`);
+    const data = await res.json();
+
+    const prices = data.prices.map(p => p[1]);
+    const labels = data.prices.map(p => {
+      const d = new Date(p[0]);
+      return `${d.getDate()}/${d.getMonth()+1}`;
+    });
+
+    if (priceChart) priceChart.destroy();
+
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    priceChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: coinId.toUpperCase() + ' Price (USD)',
+          data: prices,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: false
+          }
+        }
+      }
+    });
+
+    document.getElementById('chartModalLabel').textContent = coinId.toUpperCase() + ' - Last 7 Days';
+    const modal = new bootstrap.Modal(document.getElementById('chartModal'));
+    modal.show();
+  };
+
+  fetchPrices();
+  setInterval(fetchPrices, 60000);
   document.getElementById("year").textContent = new Date().getFullYear();
 </script>
 </body>
