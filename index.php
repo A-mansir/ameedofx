@@ -56,7 +56,7 @@ $prices = json_decode(file_get_contents("https://api.coingecko.com/api/v3/simple
 <section class="bg-dark text-white text-center p-5">
   <h1 class="display-4 fw-bold">AmeedoFx</h1>
   <p class="lead">Buy and Sell Cryptocurrency Instantly, Securely and Fast</p>
-  <a href="buy.php" class="btn btn-warning btn-lg m-2">Buy</a>
+  <a href="buy.js" class="btn btn-warning btn-lg m-2">Buy</a>
   <a href="sell.php" class="btn btn-outline-light btn-lg m-2">Sell</a>
 </section>
 
